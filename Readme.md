@@ -59,7 +59,7 @@ Este sistema automatiza toda la conversación manteniendo contexto histórico po
 
 ## 📂 Contenido del Repositorio
 
-* `flujo-agente-whatsapp-n8n.json` — Exportación completa del workflow de n8n.
+* `test1.json` — Exportación completa del workflow de n8n.
 * `README.md` — Documentación de arquitectura, memoria y herramientas del agente.
 
 ---
