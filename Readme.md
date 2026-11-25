@@ -2,7 +2,7 @@
 
 Agente de Inteligencia Artificial con soporte de herramientas (*Tool Calling*) y memoria persistente integrado con **WhatsApp Cloud API**, orquestado mediante **n8n**, impulsado por **Groq LLM** y respaldado por **PostgreSQL** y **Google Sheets** para automatizar la atención al cliente y el agendamiento de citas.
 
-🔗 **Portafolio Principal:** <https://aortegadevpa.github.io/>
+🔗 **Portafolio Principal:** <https://aortegadevpa.github.io/Portafolio/>
 
 ---
 
