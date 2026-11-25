@@ -1,0 +1,479 @@
+{
+  "name": "test1",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "cd87e587-b003-4748-8200-946c8506bca7",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b7cddb06-6164-4a07-8f76-3c20dabac92d",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "yTyxLlyifGJcyTeA",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.messages?.[0]?.type ?? '' }}",
+              "rightValue": "text",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "30990e05-dcc4-4223-83e8-b70921fc612a"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0c2a670c-06a3-4909-8a83-ddac85f4677c",
+      "name": "Only text messages",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=FECHA Y HORA ACTUAL DEL SISTEMA: {{ $now.setZone('America/Panama').toFormat(\"cccc, dd 'de' LLLL 'de' yyyy, HH:mm\") }} \nUsa esta fecha como referencia exacta para calcular \"hoy\", \"mañana\" o cualquier día de la semana que pida el cliente, colocando siempre el año correcto.\n\nEres el recepcionista virtual de Barbería Urban Cut PTY en Panamá. Hablas por WhatsApp con clientes reales.\n\nREGLAS CRÍTICAS DE COMPORTAMIENTO:\n- Habla SIEMPRE como un humano amable y natural. JAMÁS menciones palabras como \"función\", \"herramienta\", \"Google Sheets\", \"Append_row\", \"base de datos\" ni \"sistema\".\n- Si el cliente solo saluda (ej. \"Hola\", \"Buenas\"), NO busques ni menciones ninguna función. Responde directamente con un saludo cordial y pregunta en qué puedes ayudarle.\n\nEjemplo de respuesta correcta ante un saludo:\nUsuario: \"Buenas\"\nTú: \"¡Hola! Bienvenido a *Barbería Urban Cut PTY* 💈 ¿En qué te puedo ayudar hoy? Tenemos cortes, arreglo de barba y combos.\"\n\nINFORMACIÓN DEL LOCAL:\n- Horario: Lunes a sábado de 9:30 a.m. a 7:30 p.m. (Domingos cerrado).\n- Ubicación: Vía Argentina, Plaza Central, Local 8, planta baja.\n- Barberos: Carlos y Javier.\n- Pagos: Efectivo, Yappy y tarjeta.\n\nSERVICIOS Y PRECIOS:\n- Corte clásico / Low Fade / Taper: $12.00 (40 min)\n- Corte + Barba con toalla caliente: $18.00 (1 hora)\n- Solo arreglo de barba y perfilado: $8.00 (25 min)\n- Corte niño: $9.00 (30 min)\n\nFLUJO DE RESERVA:\n1. Cuando pidan precios o servicios, dáselos de forma breve usando un solo asterisco *así* para resaltar.\n2. Si quieren agendar, pídeles uno a la vez: *nombre*, *servicio*, *día y hora aproximada*, y *barbero preferido* (Carlos, Javier o cualquiera).\n3. Cuando ya tengas los 4 datos, ANTES de confirmar usa la herramienta `consultar_agenda` con el barbero y la fecha/hora. Si la herramienta NO devuelve ninguna fila, el horario está LIBRE. Solo si devuelve alguna fila el horario está ocupado. Si el cliente pidió \"cualquiera\", consulta primero con Carlos y, si está ocupado, con Javier. Si el horario ya está ocupado, dile al cliente que ese horario no está disponible y pídele elegir otra hora (o el otro barbero si eligió \"cualquiera\").\n4. ÚNICAMENTE si el horario está libre, usa la herramienta `guardar_cita` y confirma al cliente que su solicitud quedó anotada.\n\n\"OBLIGATORIO: Antes de despedirte o confirmar la cita, DEBES invocar la herramienta de Google Sheets con los datos recogidos. Nunca digas que la cita quedó guardada sin ejecutar la herramienta primero.\"\n\n- Ejecuta la herramienta de Google Sheets UNA SOLA VEZ por reserva. Si en el historial de conversación ya confirmaste y guardaste esa cita, y el cliente solo responde \"gracias\", \"ok\" o \"listo\", NO vuelvas a llamar a la herramienta; solo despídete cordialmente.",
+          "returnIntermediateSteps": true,
+          "passthroughBinaryImages": false
+        }
+      },
+      "id": "9981a0d5-93b5-4fb8-9e25-f99531f934c7",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Append row in sheet in Google guardar_cita: Registra una cita confirmada en la agenda. NO llamar a esta herramienta si el usuario solo saluda o pide precios; usarla SOLO cuando el cliente ya haya dado su nombre, servicio, día/hora y barbero.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw",
+          "mode": "list",
+          "cachedResultName": "Citas Urban Cut PTY",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Registro": "={{ $now.setZone('America/Panama').toFormat('yyyy-MM-dd HH:mm') }}",
+            "Cliente": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Cliente', ``, 'string') }}",
+            "Telefono": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+            "Servicio": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Servicio', ``, 'string') }}",
+            "Fecha_Hora_Cita": "={{ $fromAI('fecha_hora', 'Día, mes, año (estamos en el año ' + $now.year + ', hoy es ' + $now.setZone('America/Panama').toFormat('yyyy-MM-dd') + ') y hora exacta de la cita. Ejemplo: 2026-11-23 15:00') }}",
+            "Barbero": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Barbero', ``, 'string') }}",
+            "Estado": "Pendiente"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Fecha_Registro",
+              "displayName": "Fecha_Registro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telefono",
+              "displayName": "Telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Servicio",
+              "displayName": "Servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_Hora_Cita",
+              "displayName": "Fecha_Hora_Cita",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Barbero",
+              "displayName": "Barbero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4ef786b8-c60f-415c-b83c-426950e2a627",
+      "name": "guardar_cita",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        320
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SW5Gx0TBzLhyV5ig",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Busca si ya existe una cita para un barbero en una fecha y hora exactas. Usarla SIEMPRE antes de guardar una cita. Si devuelve alguna fila, ese horario está OCUPADO. Si no devuelve ninguna fila, el horario está LIBRE.",
+        "documentId": {
+          "__rl": true,
+          "value": "19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw",
+          "mode": "list",
+          "cachedResultName": "Citas Urban Cut PTY",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19x8CUjqpfvv-fgOi8fxZhue9fMchmV_aKCu9XM6NJsw/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Barbero",
+              "lookupValue": "={{ $fromAI('Barbero', 'Nombre del barbero: Carlos o Javier', 'string') }}"
+            },
+            {
+              "lookupColumn": "Fecha_Hora_Cita",
+              "lookupValue": "={{ $fromAI('fecha_hora', 'Fecha y hora de la cita en formato yyyy-MM-dd HH:mm (estamos en el año ' + $now.year + ', hoy es ' + $now.setZone('America/Panama').toFormat('yyyy-MM-dd') + '). Ejemplo: 2026-11-25 16:00', 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b8fdbbb-1a5a-4375-90c8-220df73f103d",
+      "name": "consultar_agenda",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        448
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SW5Gx0TBzLhyV5ig",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1406327579235355",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "e7300ad8-0870-4585-9fe7-15247f8a9e8d",
+      "name": "Send message",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -80
+      ],
+      "webhookId": "bee49168-9789-486c-8466-5dc03689c303",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "VL6GBK3tPUKnlg7Q",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "fc434e11-abd8-4db0-9822-2d396a6a872f",
+              "leftValue": "={{ ($json.intermediateSteps || []).some(s => s.action && s.action.tool === 'guardar_cita') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "628a2218-b28c-4560-aea1-1f780b8b172e",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        752,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1406327579235355",
+        "recipientPhoneNumber": "50763991688",
+        "textBody": "=🔔 *Nueva cita agendada en Urban Cut PTY*\n• *Cliente:* {{ $json.intermediateSteps.find(s => s.action && s.action.tool === 'guardar_cita').action.toolInput.Cliente }}\n• *Teléfono:* {{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}\n• *Servicio:* {{ $json.intermediateSteps.find(s => s.action && s.action.tool === 'guardar_cita').action.toolInput.Servicio }}\n• *Fecha/Hora:* {{ $json.intermediateSteps.find(s => s.action && s.action.tool === 'guardar_cita').action.toolInput.fecha_hora }}\n• *Barbero:* {{ $json.intermediateSteps.find(s => s.action && s.action.tool === 'guardar_cita').action.toolInput.Barbero }}",
+        "additionalFields": {}
+      },
+      "id": "e63256b0-449d-4e1f-b51f-cbc46699aec2",
+      "name": "Send message1",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        240
+      ],
+      "webhookId": "6119c21d-3fb2-427d-a90e-cf55c90f761e",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "VL6GBK3tPUKnlg7Q",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "contextWindowLength": 4
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        288
+      ],
+      "id": "547bdb1f-8695-4077-8937-a3f7616aba0f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "SWQIcQQBCvMoiCDZ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        240,
+        272
+      ],
+      "id": "dbf37cb2-a40e-4cd3-b3c1-307682fb18d3",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "ILjGZ9NfthFTFyUR",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Only text messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only text messages": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "guardar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_agenda": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "29078335-7c20-4a43-85c9-0a949f8c4e99",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "88a518be98c17088f789521beac4d03d41683538ed5cbf12afc737f1887ca4ff"
+  },
+  "nodeGroups": [],
+  "id": "plbL13A0QfDpzp8M",
+  "tags": []
+}
